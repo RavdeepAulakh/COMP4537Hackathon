@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+</head>
+<body>
+    <h1>Sentiment Analysis Team 6: Ravdeep, Adam, Justin, Alexander G, Youngwon</h1>
+    <p>Enter your statement:</p>
+    <textarea id="inputText" rows="4" cols="50"></textarea>
+    <br>
+    <button onclick="analyzeSentiment()">Analyze Sentiment</button>
+    <br>
+    <p><strong>Sentiment:</strong> <span id="sentimentLabel"></span></p>
+    <p><strong>Score:</strong> <span id="sentimentScore"></span></p>
+
+    <script>
+        function analyzeSentiment() {
+            var text = document.getElementById("inputText").value;
+            var xhrSentiment = new XMLHttpRequest();
+            xhrSentiment.open("POST", "https://a9a2-142-232-219-69.ngrok-free.app/emotion", true);
+            xhrSentiment.setRequestHeader("Content-Type", "application/json");
+            xhrSentiment.onreadystatechange = function () {
+                if (xhrSentiment.readyState === 4 && xhrSentiment.status === 200) {
+                    var response = JSON.parse(xhrSentiment.responseText);
+                    document.getElementById("sentimentLabel").innerText = response.emotion[0].label;
+                    document.getElementById("sentimentScore").innerText = response.emotion[0].score;
+
+                    // Now make a request for summarization
+                    var xhrSummarize = new XMLHttpRequest();
+                    xhrSummarize.open("POST", "https://a9a2-142-232-219-69.ngrok-free.app/summarize", true);
+                    xhrSummarize.setRequestHeader("Content-Type", "application/json");
+                    xhrSummarize.onreadystatechange = function () {
+                        if (xhrSummarize.readyState === 4 && xhrSummarize.status === 200) {
+                            var summaryResponse = JSON.parse(xhrSummarize.responseText);
+                            // Display summary in a separate span
+                            document.getElementById("summary").innerText = summaryResponse.summary[0].generated_text;
+                        }
+                    };
+                    var summarizeData = JSON.stringify({"text": "reword this: " + text});
+                    xhrSummarize.send(summarizeData);
+                }
+            };
+            var data = JSON.stringify({"text": text});
+            xhrSentiment.send(data);
+        }
+    </script>
+    <p><strong>Alternative Statement:</strong> <span id="summary"></span></p>
+</body>
+</html>
